@@ -1,6 +1,6 @@
 /*
-TODO: figure out how to bundle args to thread (struct?)
-	  threading (A LOT)
+TODO: create struct to hold list info (starting address, length)
+	  threading to sort
 
 Name: Tyler Kickham
 Program: Multithreaded sort
@@ -18,6 +18,13 @@ Output: The output is five text files, one for each of the threads' sort
 #include <unistd.h>
 #include <fstream>
 using namespace std;
+
+struct storeInfo {
+	int beginSort;					// begin the sort here for thread
+	int endSort;					// end sort here for thread
+	int half;						// which half is running
+	int* numList;					// array of numbers
+};
 
 
 void readFile(string filename, int* numList)
@@ -61,12 +68,17 @@ void sortList(int* numList, int numLines)
 
 int main()
 {
+	int line, numLines, numThreads,			// var to hold value read in, number of lines, and number of threads
+	halfPoint, quarterPoint, quarter3Point;	// var hold halfway, quarter way, 3/4 way points		
+	int lineNum = 0;						// var to hold line number
+	pthread_t thread1, thread2;		// make two threads
+	struct storeInfo * sort1;		//
+	struct storeInfo * sort2;		// make a struct for each thread
+
 	string filename;						//
 	cout << "Enter filename: ";				// get filename from user
 	cin >> filename;						//
 
-	int line, numLines;						// var to hold value read in
-	int lineNum = 0;						// var to hold line number
 	ifstream numberFile(filename.c_str());	// convert filename to chars to be opened
 	if (!numberFile.good())					//
 		cout << "File not found.\n";		// see if file exists
@@ -82,7 +94,19 @@ int main()
 		lineNum++;							// move counter to next line
 	}
 
-	
+	if (numLines <= 10)						//
+		numThreads = 2;						// if there's 10 or less items make 2 threads
+
+	if (numThreads == 2) {					// if you make 2
+		// store data for first thread
+		sort1->beginSort = 0;				// start at beginning of array
+		sort1->endSort = numLines/2;		// end sorting halfway through
+		sort1->numList = numList;			// store numberList in struct
+		// store data for second thread
+		sort2->beginSort = (numLines/2)+1;	// start at second half
+		sort2->endSort = numLines;			// end sorting at the end
+		sort2->numList = numList;			// store numberList in struct
+	}
 
 	sortList(numList, numLines);			// send array to be sorted
 
