@@ -1,6 +1,6 @@
 /*
-TODO: create struct to hold list info (starting address, length)
-	  threading to sort
+TODO: merge lists
+	  make it handle up to 4 threads
 
 Name: Tyler Kickham
 Program: Multithreaded sort
@@ -26,44 +26,30 @@ struct storeInfo {
 	int* numList;					// array of numbers
 };
 
-
-void readFile(string filename, int* numList)
+void * sortList(void * segment)
 {
-	
-
-// ================================================================
-// 		THREADING
-	// pthread_t thread1, thread2,
-	// 		  thread3, thread4;				// up to 4 threads
-	// int half1, half2, quarter1,
-	// 	quarter2, quarter3, quarter4;		// breakpoints in array
-
-	// if (numLines < 5)						// 5 for debug
-	// {
-	// 	half1 = numLines/2;					// breakpoint
-	// 	pthread_create(&thread1, NULL,
-	// 						sortFunct, (void*) /*bundled args*/);
-	// }
-
-//
-// ================================================================
-}
-
-void sortList(int* numList, int numLines)
-{
+	struct storeInfo * localSorting = (struct storeInfo *) segment;
 	int temp;
-	for (int i=0; i < numLines; i++)
+
+	for (int i = localSorting->beginSort; i < localSorting->endSort; i++)
 	{
-		for (int x=0; x < numLines-1; x++)
+		for (int x = localSorting->beginSort; x < localSorting->endSort-1; x++)
 		{
-			if (numList[x] > numList[x+1])
+			if (localSorting->numList[x] > localSorting->numList[x+1])
 			{
-				temp = numList[x+1];
-				numList[x+1] = numList[x];
-				numList[x] = temp;
+				temp = localSorting->numList[x+1];
+				localSorting->numList[x+1] = localSorting->numList[x];
+				localSorting->numList[x] = temp;
 			}
 		}
 	}
+
+	ofstream sortedFile;					//
+	if (localSorting->half == 1)
+		sortedFile.open("sorted1.txt");		// open file to write list
+	else
+		sortedFile.open("sorted2.txt");		// open file to write list
+	sortedFile.close();						// close file
 }
 
 int main()
@@ -74,6 +60,8 @@ int main()
 	pthread_t thread1, thread2;		// make two threads
 	struct storeInfo * sort1;		//
 	struct storeInfo * sort2;		// make a struct for each thread
+	sort1 = new storeInfo;			//
+	sort2 = new storeInfo;			// distinguish the two
 
 	string filename;						//
 	cout << "Enter filename: ";				// get filename from user
@@ -94,7 +82,7 @@ int main()
 		lineNum++;							// move counter to next line
 	}
 
-	if (numLines <= 10)						//
+	if (numLines <= 1000000)				//
 		numThreads = 2;						// if there's 10 or less items make 2 threads
 
 	if (numThreads == 2) {					// if you make 2
@@ -104,16 +92,20 @@ int main()
 		sort1->numList = numList;			// store numberList in struct
 		sort1->half = 1;					// store as first half
 		// store data for second thread
-		sort2->beginSort = (numLines/2)+1;	// start at second half
+		sort2->beginSort = ((numLines/2));	// start at second half
 		sort2->endSort = numLines;			// end sorting at the end
 		sort2->numList = numList;			// store numberList in struct
 		sort2->half = 2;					// store as second half
 	}
 
-	sortList(numList, numLines);			// send array to be sorted
+	pthread_create(&thread1, NULL, sortList, (void *) sort1);			// send first half to be sorted
+	pthread_create(&thread2, NULL, sortList, (void *) sort2);			// send second half to be sorted
+	pthread_join(thread1, NULL);										// let thread1 finish
+	pthread_join(thread2, NULL);										// let thread2 finish
 
+	
 	ofstream sortedFile;					//
-	sortedFile.open("finalSort.txt");		// open file to write list
+	sortedFile.open("finalAnswer.txt");		// open file to write list
 	for (int i = 0; i < numLines; i++)		//
 		sortedFile << numList[i] << "\n";	// write sorted list to file
 	sortedFile.close();						// close file
