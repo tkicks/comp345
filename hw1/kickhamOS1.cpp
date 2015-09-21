@@ -102,10 +102,12 @@ int main()
 		sort1->beginSort = 0;				// start at beginning of array
 		sort1->endSort = numLines/2;		// end sorting halfway through
 		sort1->numList = numList;			// store numberList in struct
+		sort1->half = 1;					// store as first half
 		// store data for second thread
 		sort2->beginSort = (numLines/2)+1;	// start at second half
 		sort2->endSort = numLines;			// end sorting at the end
 		sort2->numList = numList;			// store numberList in struct
+		sort2->half = 2;					// store as second half
 	}
 
 	sortList(numList, numLines);			// send array to be sorted
