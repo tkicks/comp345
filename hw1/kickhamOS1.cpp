@@ -82,6 +82,8 @@ int main()
 		lineNum++;							// move counter to next line
 	}
 
+	
+
 	sortList(numList, numLines);			// send array to be sorted
 
 	ofstream sortedFile;					//
