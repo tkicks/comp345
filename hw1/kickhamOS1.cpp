@@ -1,5 +1,5 @@
 /*
-TODO: merge lists
+TODO: change insertion sort to merge sort
 	  make it handle up to 4 threads
 
 Name: Tyler Kickham
@@ -49,19 +49,91 @@ void * sortList(void * segment)
 		sortedFile.open("sorted1.txt");		// open file to write list
 	else
 		sortedFile.open("sorted2.txt");		// open file to write list
+	for (int i = localSorting->beginSort; i < localSorting->endSort; i++)
+		sortedFile << localSorting->numList[i] << "\n";
 	sortedFile.close();						// close file
 }
+
+
+// void MergeSort(void * original, int size)
+// // original = numList array
+// {
+// 	struct storeInfo * localSort = (struct storeInfo *) original;
+// 	if (size > 1)
+// 	{
+// 		// allocate arrays
+// 		int numFloor = (size/2);
+// 		int numCeiling = size - numFloor;
+// 		int Left[numFloor];
+// 		int Right[numCeiling];
+
+// 		// copy to left (B) and right (C)
+// 		for (int i = 0; i < numFloor; i++)
+// 		{
+// 			Left[i] = localSort->numList[i];
+// 		}
+// 		for (int j = numFloor, k = 0; j < size; j++, k++)
+// 		{
+// 			Right[k] = localSort->numList[j];
+// 		}
+
+// 		// mergesort Left then Right
+// 		MergeSort(Left, numFloor);
+// 		MergeSort(Right, numCeiling);
+// 		Merge(Left, Right, (void *) localSort, numFloor, numCeiling);
+// 	}
+// }
+
+// void Merge(int* Left, int* Right, void * original, int sizeL, int sizeR)
+// {
+// 	cout << "into merge\n";
+// 	int i = 0;	// how far in Left
+// 	int j = 0;	// how far in Right
+// 	int k = 0;	// how far in original
+// 	struct storeInfo * localSort = (struct storeInfo *) original;
+
+// 	// while loop
+// 	while ((i < sizeL) and (j < sizeR))
+// 	{
+// 		if (Left[i] <= Right[j])
+// 		{
+// 			localSort->numList[k] = Left[i];
+// 			i++;
+// 		}
+// 		else
+// 		{
+// 			localSort->numList[k] = Right[j];
+// 			j++;
+// 		}
+// 		k++;
+// 	}
+// 	if (i == sizeL)
+// 	{
+// 		for (; j < sizeR; j++, k++)
+// 		{
+// 			localSort->numList[k] = Right[j];
+// 		}
+// 	}
+// 	else
+// 	{
+// 		for (; i < sizeL; i++, k++)
+// 		{
+// 			localSort->numList[k] = Left[i];
+// 		}
+// 	}
+// }
+
 
 int main()
 {
 	int line, numLines, numThreads,			// var to hold value read in, number of lines, and number of threads
 	halfPoint, quarterPoint, quarter3Point;	// var hold halfway, quarter way, 3/4 way points		
 	int lineNum = 0;						// var to hold line number
-	pthread_t thread1, thread2;		// make two threads
-	struct storeInfo * sort1;		//
-	struct storeInfo * sort2;		// make a struct for each thread
-	sort1 = new storeInfo;			//
-	sort2 = new storeInfo;			// distinguish the two
+	pthread_t thread1, thread2;				// make two threads
+	struct storeInfo * sort1;				//
+	struct storeInfo * sort2;				// make a struct for each thread
+	sort1 = new storeInfo;					//
+	sort2 = new storeInfo;					// distinguish the two
 
 	string filename;						//
 	cout << "Enter filename: ";				// get filename from user
@@ -98,11 +170,38 @@ int main()
 		sort2->half = 2;					// store as second half
 	}
 
-	pthread_create(&thread1, NULL, sortList, (void *) sort1);			// send first half to be sorted
-	pthread_create(&thread2, NULL, sortList, (void *) sort2);			// send second half to be sorted
-	pthread_join(thread1, NULL);										// let thread1 finish
-	pthread_join(thread2, NULL);										// let thread2 finish
+	pthread_create(&thread1, NULL,
+		sortList, (void *) sort1);			// send first half to be sorted
+	pthread_create(&thread2, NULL,
+		sortList, (void *) sort2);			// send second half to be sorted
+	pthread_join(thread1, NULL);			// let thread1 finish
+	pthread_join(thread2, NULL);			// let thread2 finish
 
+	// =====================================================================
+	// INSERTION SORT final sorted array
+	int j, k;									// temp vars to hold values/iterators
+	for (int i = 1; i < numLines; i++)			// while still lines to sort
+	{
+		j = numList[i];							// temp j = current value
+		k = i-1;								// temp k is iteration-1
+		while ((k >= 0) and (numList[k] > j))	// while val of k is > current
+		{
+			numList[k+1] = numList[k];			// move down through list
+			k--;								// subtract 1 from where k ends up
+		}
+		numList[k+1] = j;						// make 1 past k = starting temp val
+	}
+	//
+	// =====================================================================
+
+	// =====================================================================
+	// MERGE SORT final sorted array
+	// struct storeInfo * finalSort;			// make a struct for each thread
+	// finalSort = new storeInfo;				//
+	// finalSort->numList = numList;			// add numList to finalSort struct
+	// MergeSort((void *) finalSort, numLines);
+	//
+	// =====================================================================
 	
 	ofstream sortedFile;					//
 	sortedFile.open("finalAnswer.txt");		// open file to write list
