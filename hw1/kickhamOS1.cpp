@@ -22,7 +22,7 @@ using namespace std;
 struct storeInfo {
 	int beginSort;					// begin the sort here for thread
 	int endSort;					// end sort here for thread
-	int half;						// which half is running
+	int half;						// which half/quarter is running
 	int* numList;					// array of numbers
 };
 
@@ -47,8 +47,12 @@ void * sortList(void * segment)
 	ofstream sortedFile;					//
 	if (localSorting->half == 1)
 		sortedFile.open("sorted1.txt");		// open file to write list
-	else
+	else if (localSorting->half == 2)
 		sortedFile.open("sorted2.txt");		// open file to write list
+	else if (localSorting->half == 3)
+		sortedFile.open("sorted3.txt");		// open file to write list
+	else
+		sortedFile.open("sorted4.txt");		// open file to write list
 	for (int i = localSorting->beginSort; i < localSorting->endSort; i++)
 		sortedFile << localSorting->numList[i] << "\n";
 	sortedFile.close();						// close file
@@ -129,11 +133,16 @@ int main()
 	int line, numLines, numThreads,			// var to hold value read in, number of lines, and number of threads
 	halfPoint, quarterPoint, quarter3Point;	// var hold halfway, quarter way, 3/4 way points		
 	int lineNum = 0;						// var to hold line number
-	pthread_t thread1, thread2;				// make two threads
+	pthread_t thread1, thread2,				//
+			  thread3, thread4;				// make four threads
 	struct storeInfo * sort1;				//
-	struct storeInfo * sort2;				// make a struct for each thread
-	sort1 = new storeInfo;					//
-	sort2 = new storeInfo;					// distinguish the two
+	struct storeInfo * sort2;				//
+	struct storeInfo * sort3;				//
+	struct storeInfo * sort4;				// make a struct for each thread
+	sort1 = new storeInfo;					// first quarter sort thread
+	sort2 = new storeInfo;					// second quarter sort thread
+	sort3 = new storeInfo;					// third quarter sort thread
+	sort4 = new storeInfo;					// fourth quarter sort thread
 
 	string filename;						//
 	cout << "Enter filename: ";				// get filename from user
@@ -154,10 +163,13 @@ int main()
 		lineNum++;							// move counter to next line
 	}
 
-	if (numLines <= 1000000)				//
+	if (numLines <= 20000)					//
 		numThreads = 2;						// if there's 10 or less items make 2 threads
+	else
+		numThreads = 4;
 
-	if (numThreads == 2) {					// if you make 2
+	if (numThreads == 2)
+	{					// if you make 2
 		// store data for first thread
 		sort1->beginSort = 0;				// start at beginning of array
 		sort1->endSort = numLines/2;		// end sorting halfway through
@@ -168,14 +180,51 @@ int main()
 		sort2->endSort = numLines;			// end sorting at the end
 		sort2->numList = numList;			// store numberList in struct
 		sort2->half = 2;					// store as second half
-	}
 
-	pthread_create(&thread1, NULL,
-		sortList, (void *) sort1);			// send first half to be sorted
-	pthread_create(&thread2, NULL,
-		sortList, (void *) sort2);			// send second half to be sorted
-	pthread_join(thread1, NULL);			// let thread1 finish
-	pthread_join(thread2, NULL);			// let thread2 finish
+
+		pthread_create(&thread1, NULL,
+			sortList, (void *) sort1);			// send first half to be sorted
+		pthread_create(&thread2, NULL,
+			sortList, (void *) sort2);			// send second half to be sorted
+		pthread_join(thread1, NULL);			// let thread1 finish
+		pthread_join(thread2, NULL);			// let thread2 finish
+	}
+	else
+	{
+		// store data for first thread
+		sort1->beginSort = 0;				// start at beginning of array
+		sort1->endSort = numLines/4;		// end sorting quarter through
+		sort1->numList = numList;			// store numberList in struct
+		sort1->half = 1;					// store as first half
+		// store data for second thread
+		sort2->beginSort = ((numLines/4));	// start at second half
+		sort2->endSort = (numLines/2);		// end sorting at the half
+		sort2->numList = numList;			// store numberList in struct
+		sort2->half = 2;					// store as second half
+		// store data for third thread
+		sort3->beginSort = (numLines/2);				// start at beginning of array
+		sort3->endSort = (numLines-(numLines/4));		// end sorting 3/4 through
+		sort3->numList = numList;			// store numberList in struct
+		sort3->half = 3;					// store as first half
+		// store data for fourth thread
+		sort4->beginSort = (numLines-(numLines/4));	// start at second half
+		sort4->endSort = numLines;		// end sorting at the end
+		sort4->numList = numList;			// store numberList in struct
+		sort4->half = 4;					// store as second half
+
+		pthread_create(&thread1, NULL,
+			sortList, (void *) sort1);			// send first half to be sorted
+		pthread_create(&thread2, NULL,
+			sortList, (void *) sort2);			// send second half to be sorted
+		pthread_create(&thread3, NULL,
+			sortList, (void *) sort3);			// send first half to be sorted
+		pthread_create(&thread4, NULL,
+			sortList, (void *) sort4);			// send second half to be sorted
+		pthread_join(thread1, NULL);			// let thread1 finish
+		pthread_join(thread2, NULL);			// let thread2 finish
+		pthread_join(thread3, NULL);			// let thread1 finish
+		pthread_join(thread4, NULL);			// let thread2 finish
+	}
 
 	// =====================================================================
 	// INSERTION SORT final sorted array
