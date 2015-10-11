@@ -1,3 +1,5 @@
 Hi there \cbob. \cwhat
-a big \unose you have!  Fillertextfillertextfillertextfill.
-It's truly \Csmellerific Fillertextfillertextfillertextfil.
+a big \unose you \chave!
+\cIt's \utruly \Csmellerific.
+
+\Cbye

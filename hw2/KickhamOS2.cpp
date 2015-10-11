@@ -46,17 +46,14 @@ void readFile()
 		exit(1);							// exit
 	}
 
-	// int i=0;								// iterator for textArray array
+	int i=0;								// iterator for textArray array
 	while (getline(textFile, line))			// while there is another line
 	{
-		int j = 0;
-		while ((j<linelength) and (line[j]!='\n'))		// for each char in the line
+		for (int j=0; j<linelength; i++, j++)		// for each char in the line
 		{
-			textArray[j] = line[j];			// copy it into the array
-			j++;
+			textArray[i] = line[j];			// copy it into the array
 		}
-		textArray[j] = '\n';
-		formatText(j);						// while not threading/signalling
+		formatText(i);						// while not threading/signalling
 		// writeText(i);
 	}
 }
@@ -69,7 +66,6 @@ void formatText(int i)
 {
 	//int i = 0;								// var for iteration
 	//int j = 0;								// var for rewriting in array
-
 	int j = i-linelength;
 	int max = i;
 	i -= linelength;
@@ -143,16 +139,15 @@ void writeText(int j)
 // OUTPUT: formatted and aligned text
 // right and left align text then display it
 {
-	cout << "j-1" << textArray[j] << endl;
 	int max = j;
 	// cout << max << endl;
 	j -= linelength;
-	while ((j < max) and (textArray[j] != '\n'))
+	while (j < max)
 	{
-		cout << textArray[j];
+		cout << textArray[1][j];
 		j++;
 	}
-	cout << textArray[j];
+	cout << endl;
 }
 
 int main()
