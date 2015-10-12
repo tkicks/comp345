@@ -190,5 +190,5 @@ int main()
 	pthread_mutex_destroy(&formatting);
 	pthread_mutex_destroy(&writing);
 
-	cout << "\nFinished with text, bitch\n";
+	cout << "\nFinished with text\n";
 }
