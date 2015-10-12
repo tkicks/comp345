@@ -1,6 +1,4 @@
 void readFile();
-void formatText();
-void writeText();
-void formatter(int location, int locationJ);
-void wait(int lock);
-void signal(int lock);
+void formatText(int row);
+void writeText(int row);
+void formatter(int location, int locationJ, int row);
