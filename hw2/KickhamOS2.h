@@ -1,4 +1,4 @@
-void readFile();
-void formatText(int row);
-void writeText(int row);
+void * readFile(void *);
+void * formatText(void *);
+void * writeText(void *);
 void formatter(int location, int locationJ, int row);

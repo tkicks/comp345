@@ -9,7 +9,6 @@ Input:   The input is the name of a text file typed in from the keyboard,
 Output:  The output is the text displayed aligned/formatted
 
 Todo: align
-	  thread
 */
 
 
@@ -24,12 +23,14 @@ using namespace std;
 
 int startOverwrite[2];															// where to start read/write in array
 int maxlength = 60;																// max input line length
-char textArray[5][60];															// char array to store line in (5 rows of 60 chars)
+char textArray[199][60];														// char array to store line in (5 rows of 60 chars)
+bool stillReading = true;														// tell threads if there's more to do
+pthread_mutex_t reading, formatting, writing;									// semaphores for reading, formatting, and writing
 
-void readFile()
+void * readFile(void *)
 // INPUT: none
 // OUTPUT: none
-// reads file in to character array and signals formatText when to start
+// reads file in to character array and tells formatting thread when to format
 {
 	string line;																// var to hold line read in
 	string filename;															// var for filename
@@ -63,42 +64,50 @@ void readFile()
 			textArray[row][clear] = 'b';										// mark as not having control sequence
 			textArray[row+1][clear] = ' ';										// put space char as filler
 		}
-		formatText(row);														// while not threading/signalling
-		if (row < 4)															// if not on last set of rows
-			row += 2;															// increase row counter by 2
-		else																	// otherwise
-			row = 0;															// restart in first row of array
+		row += 2;																// start new row
+		pthread_mutex_unlock(&formatting);										// unlock formatting thread
+		pthread_mutex_lock(&reading);											// lock reading thread
 	}
+	pthread_mutex_unlock(&formatting);											// unlock formatting thread for last time
+	pthread_mutex_unlock(&writing);												// unlock writing thread for last time
+	stillReading = false;														// tell threads to stop when done
 }
 
-void formatText(int row)
-// INPUT: int to dictate which row of array to look at (while no semaphores to keep in loop)
+void * formatText(void *)
+// INPUT: none
 // OUTPUT: none
-// formats all control sequences in text segment allowed to work on, signals
+// calls formatter at every control sequence, tells writing thread when to write
 {
-	int readFrom=0;																// var for index to read from
-	int writeHere=0;															// var for index to write to
+	pthread_mutex_lock(&formatting);											// lock the formatting thread so it can't go too early
+	int row = 0;																// var for which row, init at 0
 
-	while (readFrom < maxlength)												// while there are more indices
+	while (stillReading)
 	{
-		if (textArray[row][readFrom] == 'a')									// if the character is backslash (marked w/ a)
+		int readFrom = 0;														// var for index to read from
+		int writeHere = 0;														// var for index to write to
+		while (readFrom < maxlength)											// while there are more indices
 		{
-			formatter(readFrom, writeHere, row+1);								// send indices to read/write and which row of array to be formatted
-			writeHere= startOverwrite[0];										// new write to index
-			readFrom = startOverwrite[1];										// new read from index
+			if (textArray[row][readFrom] == 'a')								// if the character is backslash (marked w/ a)
+			{
+				formatter(readFrom, writeHere, row+1);							// send indices to read/write and which row of array to be formatted
+				writeHere= startOverwrite[0];									// new write to index
+				readFrom = startOverwrite[1];									// new read from index
+			}
+			else																// otherwise
+			{
+				textArray[row+1][writeHere] = textArray[row+1][readFrom];		// rewrite at next spot of array
+				readFrom += 1;													// increase read index
+				writeHere += 1;													// increase write index
+			}
 		}
-		else
-		{
-			textArray[row+1][writeHere] = textArray[row+1][readFrom];			// rewrite at next spot of array
-			readFrom += 1;														// increase read index
-			writeHere += 1;														// increase write index
-		}
+		row += 2;																// move on to next set of rows
+		pthread_mutex_unlock(&writing);											// unlock writing thread
+		pthread_mutex_lock(&formatting);										// lock formatting thread
 	}
-	writeText(row+1);															// replace with a semaphore
 }
 
 void formatter(int location, int locationJ, int row)
-// INPUT: int of location to read and location to write respectively
+// INPUT: int of location to read, location to write, and which row
 // OUTPUT: changes int location to write[0] and read[1] in textArray
 // performs formatting at current location in textArray
 {
@@ -140,21 +149,46 @@ void formatter(int location, int locationJ, int row)
 	}
 }
 
-void writeText(int row)
+void * writeText(void *)
 // INPUT: none
-// OUTPUT: formatted and aligned text
+// OUTPUT: formatted and aligned text displayed to console
 // right and left align text then display it
 {
-	for (int j=0; j<maxlength; j++)
-		cout << textArray[row][j];
-
-	cout << endl;
+	pthread_mutex_lock(&writing);
+	int row = 1;
+	while (stillReading)
+	{
+		for (int j=0; j<maxlength; j++)
+			cout << textArray[row][j];
+		cout << endl;
+		row += 2;
+		pthread_mutex_unlock(&reading);
+		pthread_mutex_lock(&writing);
+	}
 }
 
 int main()
 {
-	// char textArray[100];					// array for lines of text, line of text
-	readFile();					// call function to read in file
-	//formatText();
-	//writeText();					// part 3 of program
+	pthread_t thread1, thread2, thread3;										// thread1 = read, thread2 = format, thread3 = write
+	pthread_mutex_init(&reading, NULL);											// initialize reading thread
+	pthread_mutex_init(&formatting, NULL);										// initialize formatting thread
+	pthread_mutex_init(&writing, NULL);											// initialize writing thread
+	// maybe lock here depending on where locking implemented inside threads
+	pthread_mutex_lock(&reading);
+	pthread_mutex_lock(&formatting);
+	pthread_mutex_lock(&writing);
+
+	pthread_create(&thread1, NULL, readFile, (void *) NULL);
+	pthread_create(&thread2, NULL, formatText, (void *) NULL);
+	pthread_create(&thread3, NULL, writeText, (void *) NULL);
+
+	pthread_join(thread1, NULL);
+	pthread_join(thread2, NULL);
+	pthread_join(thread3, NULL);
+
+	pthread_mutex_destroy(&reading);
+	pthread_mutex_destroy(&formatting);
+	pthread_mutex_destroy(&writing);
+
+	cout << "\nFinished with text, bitch\n";
 }
