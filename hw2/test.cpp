@@ -8,7 +8,8 @@ Input:   The input is the name of a text file typed in from the keyboard,
 	     contains text of <= 200 lines of <= 60 chars
 Output:  The output is the text displayed aligned/formatted
 
-Todo: align
+Todo: perfect alignment
+	  shorten
 */
 
 
@@ -16,14 +17,16 @@ Todo: align
 #include <string>
 #include <iostream>
 #include <pthread.h>
-#include <unistd.h>
 #include <fstream>
 #include <stdlib.h>
 using namespace std;
 
-int startOverwrite[2];															// where to start read/write in array
+
 int maxlength = 60;																// max input line length
-char textArray[199][60];														// char array to store line in (5 rows of 60 chars)
+int charCounter = 0;															// count number of characters per line
+int numWords = 0;																// count number of words per line
+int startOverwrite[2];															// where to start read/write in array
+char textArray[399][60];														// char array to store line in
 bool stillReading = true;														// tell threads if there's more to do
 pthread_mutex_t reading, formatting, writing;									// semaphores for reading, formatting, and writing
 
@@ -43,26 +46,33 @@ void * readFile(void *)
 		exit(1);																// exit
 	}
 
-	int row = 0;
+	int row = 0;																// start at row 0 in array
 	while (getline(textFile, line))												// while there is another line of text
 	{
 		int column = 0;															// start at the beginning of the row/line
 		if (line.length() > 0)													// if it's not a blank line
 		{
+			numWords += 1;														// so don't /0 if there is one word in the line
 			while (column < line.length())										// while the column is w/in the length of text
 			{
-				if (line[column] == '\\')										// if text char is slash
-					textArray[row][column] = 'a';								// mark as control sequence (a)
+				if (line[column] == ' ')										// if the next char is a space
+					numWords += 1;												// increase word count by one
 				else															// otherwise
-					textArray[row][column] = 'b';								// mark as not a control sequence (b)
+				{
+					if (line[column] == '\\')									// if text char is slash
+						textArray[row][column] = 'a';							// mark as control sequence (a)
+					else														// otherwise
+						textArray[row][column] = 'b';							// mark as not a control sequence (b)
+					charCounter += 1;											// counter another character
+				}
 				textArray[row+1][column] = line[column];						// store the char in textArray
 				column++;														// go to next column in row
 			}
 		}
 		for (int clear = line.length(); clear < maxlength; clear++)				// for each extra index
 		{
-			textArray[row][clear] = 'b';										// mark as not having control sequence
-			textArray[row+1][clear] = ' ';										// put space char as filler
+			textArray[row][clear] = 'e';										// mark as empty index for writing
+			textArray[row+1][clear] = '\0';										// put space char as filler
 		}
 		row += 2;																// start new row
 		pthread_mutex_unlock(&formatting);										// unlock formatting thread
@@ -112,6 +122,7 @@ void formatter(int location, int locationJ, int row)
 // performs formatting at current location in textArray
 {
 	char nextChar = textArray[row][location+1];									// holds next char in array for switch
+	charCounter -= 2;															// remove control sequence from character count
 	switch (nextChar)															// check which case the nextChar is
 	{
 		case 'c':																// when nextChar == 'c' capitalize the first char of word
@@ -131,6 +142,7 @@ void formatter(int location, int locationJ, int row)
 			startOverwrite[1] = location;										// store read location
 			break;
 		case 'u':																// when nextChar == 'u' underline entire word
+			charCounter += 2;													// add underscores to number of chars
 			textArray[row][locationJ] = '_';									// replace the slash with _
 			location += 2;														// increase read location to after control sequence
 			locationJ += 1;														// increase the write location by one
@@ -154,16 +166,34 @@ void * writeText(void *)
 // OUTPUT: formatted and aligned text displayed to console
 // right and left align text then display it
 {
-	pthread_mutex_lock(&writing);
-	int row = 1;
-	while (stillReading)
+	pthread_mutex_lock(&writing);												// lock writing so it can't go again
+	int row = 1;																// start at row 1
+	int numSpaces, spacesToAdd;													// vars for number of spaces total and number of spaces to cout at a time
+	int lineLen = 50;															// cout length = 50
+	while (stillReading)														// while there is more to be written
 	{
-		for (int j=0; j<maxlength; j++)
-			cout << textArray[row][j];
-		cout << endl;
-		row += 2;
-		pthread_mutex_unlock(&reading);
-		pthread_mutex_lock(&writing);
+		if (textArray[row-1][0] != 'e')											// if it is not an empty line
+		{
+			numSpaces = lineLen - charCounter;									// total num spaces = length of line - num chars
+			spacesToAdd = numSpaces/numWords;									// spaces at a time = total num spaces/num words
+			for (int j=0; j<maxlength; j++)										// for 0-maxlength of array
+			{
+				if (textArray[row][j] == ' ' && numWords > 0)					// if the next char is a space and there are more words left
+				{
+					for (int space = 0; space < spacesToAdd; space++)			// for 0-spaces at a time
+						cout << " ";											// cout a space
+					numWords -= 1;												// decrease words left by one
+				}
+				else															// otherwise
+					cout << textArray[row][j];									// cout the char
+			}
+		}
+		charCounter = 0;														// reset char counter
+		numWords = 0;															// reset word counter
+		cout << endl;															// break the line
+		row += 2;																// move on to next row for next time unlocked
+		pthread_mutex_unlock(&reading);											// unlock reading thread
+		pthread_mutex_lock(&writing);											// lock writing thread
 	}
 }
 
@@ -173,22 +203,20 @@ int main()
 	pthread_mutex_init(&reading, NULL);											// initialize reading thread
 	pthread_mutex_init(&formatting, NULL);										// initialize formatting thread
 	pthread_mutex_init(&writing, NULL);											// initialize writing thread
-	// maybe lock here depending on where locking implemented inside threads
-	pthread_mutex_lock(&reading);
-	pthread_mutex_lock(&formatting);
-	pthread_mutex_lock(&writing);
 
-	pthread_create(&thread1, NULL, readFile, (void *) NULL);
-	pthread_create(&thread2, NULL, formatText, (void *) NULL);
-	pthread_create(&thread3, NULL, writeText, (void *) NULL);
+	pthread_mutex_lock(&reading);												// lock reading thread 
+	pthread_mutex_lock(&formatting);											// lock formatting thread 
+	pthread_mutex_lock(&writing);												// lock writing thread 
 
-	pthread_join(thread1, NULL);
-	pthread_join(thread2, NULL);
-	pthread_join(thread3, NULL);
+	pthread_create(&thread1, NULL, readFile, (void *) NULL);					// create reading thread
+	pthread_create(&thread2, NULL, formatText, (void *) NULL);					// create formatting thread
+	pthread_create(&thread3, NULL, writeText, (void *) NULL);					// create writing thread
 
-	pthread_mutex_destroy(&reading);
-	pthread_mutex_destroy(&formatting);
-	pthread_mutex_destroy(&writing);
+	pthread_join(thread1, NULL);												// wait for all threads to finish
+	pthread_join(thread2, NULL);												// wait for all threads to finish
+	pthread_join(thread3, NULL);												// wait for all threads to finish
 
-	cout << "\nFinished with text\n";
+	pthread_mutex_destroy(&reading);											// destroy reading thread
+	pthread_mutex_destroy(&formatting);											// destroy formatting thread
+	pthread_mutex_destroy(&writing);											// destroy writing thread
 }
