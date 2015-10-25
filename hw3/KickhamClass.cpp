@@ -1,5 +1,13 @@
 #include "KickhamClass.h"
 
+Job::Job()
+{
+	this->startTime = 0;
+	this->pid = 0;
+	this->prob = 0;
+	this->timeLeft = 0;
+}
+
 Job::Job(int startTime, int pid, int prob, int length)
 // INPUT: ints for start time, PID, probability of IO, length of process
 // OUTPUT: none
@@ -13,5 +21,30 @@ Job::Job(int startTime, int pid, int prob, int length)
 
 Job::~Job()
 {
-	delete this;
+	// delete;
+}
+
+int Job::getStart()
+{
+	return this->startTime;
+}
+
+int Job::getPID()
+{
+	return this->pid;
+}
+
+int Job::getProb()
+{
+	return this->prob;
+}
+
+int Job::getLeft()
+{
+	return this->timeLeft;
+}
+
+void Job::setLeft(int timeLeft)
+{
+	this->timeLeft = timeLeft;
 }
