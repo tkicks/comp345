@@ -44,7 +44,17 @@ int Job::getLeft()
 	return this->timeLeft;
 }
 
+int Job::getIOLen()
+{
+	return this->ioLen;
+}
+
 void Job::setLeft(int timeLeft)
 {
 	this->timeLeft = timeLeft;
+}
+
+void Job::setIOLen(int ioLen)
+{
+	this->ioLen = ioLen;
 }

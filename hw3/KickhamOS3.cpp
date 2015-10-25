@@ -4,10 +4,9 @@ Program: Round Robin Simulator (OS3)
 Purpose: Simuate a round robin scheduler to see how tweaks in scheduling can effect output
 Input:   The input is the name of a text file typed in from the keyboard which contains
 Output:  
-Completed: getFile, getRestInfo, generate random number (give it use though)
+Completed: getFile, getRestInfo, checkNewJob, removeQuantum
 TODO: what if two jobs start at same time
 */
-
 
 #include "KickhamClass.cpp"
 #include "KickhamOS3.h"
@@ -102,10 +101,12 @@ void roundRobin()
 	int runTime = 1;									// start sim at 1 unit time
 	while (runTime < simTime*1000)						// while there is still time left
 	{
-		if (readyQ.size() < degree)					// if the degree is not yet met
+		if (readyQ.size() < degree)						// if the degree is not yet met
 			doJob(checkNewJob(runTime));				// do the job at index returned from check if there is a job starting
 		else											// otherwise if too many jobs
 			doJob(-1);									// do not check for new jobs and send signal to do job from readyQ
+		// if (ioQ.size() > 0)								// if there are items waiting on IO
+			//
 		runTime += 1;									// increment runtime
 	}
 }
@@ -126,10 +127,32 @@ int checkNewJob(int currentTime)
 void doJob(int vectorIndex)
 {
 	Job currentJob;										// object being worked on
+	int ioLen;
+	if (ioQ.size() > 0)
+	{
+		currentJob = ioQ.front();
+		ioLen = currentJob.getIOLen() - 1;
+		if (ioLen > 0)
+			currentJob.setIOLen(ioLen);
+		else
+		{
+			readyQ.push_back(currentJob);
+			ioQ.erase(ioQ.begin());
+		}
+	}
 	if (vectorIndex != -1)								// if there is no job starting at this time
 	{
 		currentJob = jobQ.at(vectorIndex);				// set job to starting index job
-		removeQuantum(currentJob);						// call function to remove quantum and place at back of queue
+		bool needsIO = probIO(randomGen(0), currentJob);
+		cout << needsIO << endl;
+		if (!needsIO)
+			removeQuantum(currentJob);						// call function to remove quantum and place at back of queue
+		else
+		{
+			ioLen = randomGen(1);
+			currentJob.setIOLen(ioLen);
+			ioQ.push_back(currentJob);
+		}
 		jobQ.erase(jobQ.begin()+vectorIndex);			// erase the current job from unstarted jobs queue
 	}
 	else if (readyQ.size() > 0)							// otherwise if readyQ has jobs waiting
@@ -154,6 +177,14 @@ void removeQuantum(Job currentJob)
 	}
 	else												// otherwise if the job is done
 		jobsDone += 1;									// add a job completed
+}
+
+bool probIO(int genProb, Job currentJob)
+// INPUT: probability of needing IO, current job object working on
+// OUTPUT: true if the job needs IO, false if it doesn't
+// calculates if the job is going to need IO
+{
+	return (genProb <= currentJob.getProb());
 }
 
 void debugTest()
