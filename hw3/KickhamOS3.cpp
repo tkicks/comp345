@@ -30,6 +30,7 @@ vector<Job> ioQ;										// queue jobs waiting to do IO
 
 int main()
 {
+	srand(time(NULL));									// seed for random number generator
 	getFile();											// get the input file
 	getRestInfo();										// get the rest of the info needed for the simluation
 
@@ -83,7 +84,6 @@ int randomGen(int probOrLen)
 // OUTPUT: random int
 // generate a random int for prob of IO/length of IO
 {
-	srand(time(NULL));
 	int returnVal;										// either probability or length to return
 	if (probOrLen == 0)									// if generating probability
 		returnVal = rand() % 5 + 0;						// probability of IO is between 0 and .05
@@ -97,8 +97,8 @@ void roundRobin()
 // OUTPUT: none
 // schedule simulator
 {
-	int isJob, jobTime, newJob;							// is there job at current time, job in IO time left
 	int runTime = 1;									// start sim at 1 unit time
+	int isJob, jobTime, newJob;							// is there job at current time, job in IO time left
 	while (runTime < simTime*1000)						// while there is still time left
 	{
 		if (readyQ.size() < degree)						// if the degree is not yet met
@@ -131,10 +131,11 @@ void doJob(int vectorIndex)
 	if (ioQ.size() > 0)
 	{
 		currentJob = ioQ.front();
-		ioLen = currentJob.getIOLen() - 1;
-		if (ioLen > 0)
-			currentJob.setIOLen(ioLen);
-		else
+		ioLen = currentJob.getIOLen();
+		ioLen -= 1;
+		ioQ.front().setIOLen(ioLen);
+		cout << ioQ.front().getIOLen() << endl;
+		if (ioLen <= 0)
 		{
 			readyQ.push_back(currentJob);
 			ioQ.erase(ioQ.begin());
@@ -144,7 +145,6 @@ void doJob(int vectorIndex)
 	{
 		currentJob = jobQ.at(vectorIndex);				// set job to starting index job
 		bool needsIO = probIO(randomGen(0), currentJob);
-		cout << needsIO << endl;
 		if (!needsIO)
 			removeQuantum(currentJob);						// call function to remove quantum and place at back of queue
 		else
@@ -158,7 +158,15 @@ void doJob(int vectorIndex)
 	else if (readyQ.size() > 0)							// otherwise if readyQ has jobs waiting
 	{
 		currentJob = readyQ.front();					// set job to the first in the queue
-		removeQuantum(currentJob);						// call function to remove quantum and place at back of queue
+		bool needsIO = probIO(randomGen(0), currentJob);
+		if (!needsIO)
+			removeQuantum(currentJob);						// call function to remove quantum and place at back of queue
+		else
+		{
+			ioLen = randomGen(1);
+			currentJob.setIOLen(ioLen);
+			ioQ.push_back(currentJob);
+		}
 		readyQ.erase(readyQ.begin());					// erase current job from front
 	}
 }
@@ -192,7 +200,9 @@ void debugTest()
 {
 	// check that everything got into ready queue -----------
 	Job currentJob;
-	int currentPID, currentStartTime, currentProb, currentTimeLeft;
+	int currentPID, currentStartTime, currentProb, currentTimeLeft, currentIOTime;
+	cout << "jobQ size: " << jobQ.size() << endl;
+	cout << "readyQ:\n";
 	for (int i=0; i<readyQ.size(); i++)
 	{
 		currentJob = readyQ.at(i);
@@ -200,7 +210,19 @@ void debugTest()
 		currentPID = currentJob.getPID();
 		currentProb = currentJob.getProb();
 		currentTimeLeft = currentJob.getLeft();
-		cout << currentStartTime << " " << currentPID << " " << currentProb << " " << currentTimeLeft << endl;
+		currentIOTime = currentJob.getIOLen();
+		cout << currentStartTime << " " << currentPID << " " << currentProb << " " << currentTimeLeft << " " << currentIOTime << endl;
+	}
+	cout << "ioQ:\n";
+	for (int i=0; i<ioQ.size(); i++)
+	{
+		currentJob = ioQ.at(i);
+		currentStartTime = currentJob.getStart();
+		currentPID = currentJob.getPID();
+		currentProb = currentJob.getProb();
+		currentTimeLeft = currentJob.getLeft();
+		currentIOTime = currentJob.getIOLen();
+		cout << currentStartTime << " " << currentPID << " " << currentProb << " " << currentTimeLeft << " " << currentIOTime << endl;
 	}
 	// check that rest of input made it ---------------------
 	// cout << simTime << " " << quantum << " " << degree << endl;
