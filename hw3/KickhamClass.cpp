@@ -17,6 +17,7 @@ Job::Job(int startTime, int pid, int prob, int length)
 	this->pid = pid;
 	this->prob = prob;
 	this->timeLeft = length;
+	this->totalIO = 0;
 }
 
 Job::~Job()
@@ -57,4 +58,8 @@ void Job::setLeft(int timeLeft)
 void Job::setIOLen(int ioLen)
 {
 	this->ioLen = ioLen;
+}
+void Job::setTotalIO(int ioLen)
+{
+	this->totalIO += ioLen;
 }

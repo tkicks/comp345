@@ -12,6 +12,7 @@ class Job
 		int getIOLen();
 		void setLeft(int timeLeft);
 		void setIOLen(int ioLen);
+		void setTotalIO(int ioLen);
 	private:
-		int startTime, pid, prob, timeLeft, ioLen;
+		int startTime, pid, prob, timeLeft, ioLen, totalIO;
 };
