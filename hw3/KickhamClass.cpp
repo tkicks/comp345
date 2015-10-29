@@ -18,6 +18,7 @@ Job::Job(int startTime, int pid, int prob, int length)
 	this->prob = prob;
 	this->timeLeft = length;
 	this->totalIO = 0;
+	this->ioLen = 0;
 }
 
 Job::~Job()
