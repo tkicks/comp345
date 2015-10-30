@@ -7,3 +7,4 @@ void doJob();
 void removeQuantum(Job currentJob);
 bool probIO(int genProb, Job currentJob);
 void debugTest();
+void jobDone(Job currentJob);
