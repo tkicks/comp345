@@ -51,6 +51,11 @@ int Job::getIOLen()
 	return this->ioLen;
 }
 
+int Job::getTurnaround()
+{
+	return this->turnaround;
+}
+
 void Job::setLeft(int timeLeft)
 {
 	this->timeLeft = timeLeft;
@@ -63,4 +68,9 @@ void Job::setIOLen(int ioLen)
 void Job::setTotalIO(int ioLen)
 {
 	this->totalIO += ioLen;
+}
+
+void Job::setTurnaround(int turnaround)
+{
+	this->turnaround = turnaround;
 }

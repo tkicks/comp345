@@ -27,6 +27,7 @@ int switchTime = 4;										// time to swap jobs (ms)
 int quantumCounter = 0;									// counter for taking off quantum
 int runTime = 1;										// start sim at 1 unit time
 int jobLength = 0;										// total job length
+int turnAround = 0;
 vector<Job> jobQ;										// queue jobs waiting for start time
 vector<Job> readyQ;										// queue jobs ready for CPU
 vector<Job> ioQ;										// queue jobs waiting to do IO
@@ -178,7 +179,7 @@ void removeQuantum(Job currentJob)
 		currentJob.setLeft(jobTime-quantum);			// subtract quantum from jobTime
 		// cout << quantumCounter << " " << quantum << " " << runTime << " " << currentJob.getPID() << " " << currentJob.getLeft() << endl;
 		readyQ.push_back(currentJob);					// push job to back of queue
-		runTime += 4;									// add 4 for swap time
+		// runTime += 4;									// add 4 for swap time
 		quantumCounter = 0;								// reset quantumCounter to 0
 	}
 	if (currentJob.getLeft() <= 0)						// if the job is done
@@ -189,9 +190,11 @@ void removeQuantum(Job currentJob)
 
 void jobDone(Job currentJob)
 {
+	turnAround += runTime-currentJob.getStart();
+	currentJob.setTurnaround(turnAround);
 	jobsDone += 1;									// add one to jobsDone counter
-	jobLength += (runTime - currentJob.getStart() - currentJob.getIOLen());
-	cout << currentJob.getPID() << " finished" << endl;
+	jobLength += currentJob.getTurnaround() - currentJob.getIOLen();
+	cout << currentJob.getPID() << " finished after " << currentJob.getTurnaround() - currentJob.getIOLen() << endl;
 	readyQ.erase(readyQ.end());
 }
 
@@ -241,13 +244,14 @@ void debugTest()
 	// cout << lengthIO << endl;
 
 	int avgLength = jobLength/jobsDone;
+	int avgTurnaround = turnAround/jobsDone;
 
 	cout << "\n\nNumber total jobs: " << readyQ.size() + ioQ.size() + jobQ.size() + jobsDone << endl;
 	cout << "Throughput: " << jobsDone << endl;
 	cout << "Number of jobs still in system: " << readyQ.size() + ioQ.size() << endl;
 	cout << "Number of jobs skipped: " << jobQ.size() << endl;
 	cout << "Avg job length: " << avgLength << " ms" << endl;
-	cout << "Avg turnaround: " << endl;
+	cout << "Avg turnaround: " << avgTurnaround << " ms" << endl;
 	cout << "Avg wait time: " << endl;
 	cout << "CPU utilization: " << endl;
 }

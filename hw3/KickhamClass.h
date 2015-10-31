@@ -10,9 +10,11 @@ class Job
 		int getProb();
 		int getLeft();
 		int getIOLen();
+		int getTurnaround();
 		void setLeft(int timeLeft);
 		void setIOLen(int ioLen);
 		void setTotalIO(int ioLen);
+		void setTurnaround(int turnaround);
 	private:
-		int startTime, pid, prob, timeLeft, ioLen, totalIO;
+		int startTime, pid, prob, timeLeft, ioLen, totalIO, turnaround;
 };
