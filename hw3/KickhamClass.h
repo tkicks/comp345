@@ -11,10 +11,13 @@ class Job
 		int getLeft();
 		int getIOLen();
 		int getTurnaround();
+		int getLength();
+		int getWaitTime();
 		void setLeft(int timeLeft);
 		void setIOLen(int ioLen);
 		void setTotalIO(int ioLen);
 		void setTurnaround(int turnaround);
+		void setWaitTime(int waitTime);
 	private:
-		int startTime, pid, prob, timeLeft, ioLen, totalIO, turnaround;
+		int startTime, pid, prob, length, timeLeft, ioLen, totalIO, turnaround, waitTime;
 };

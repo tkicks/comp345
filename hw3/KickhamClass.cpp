@@ -17,6 +17,7 @@ Job::Job(int startTime, int pid, int prob, int length)
 	this->pid = pid;
 	this->prob = prob;
 	this->timeLeft = length;
+	this->length = length;
 	this->totalIO = 0;
 	this->ioLen = 0;
 }
@@ -56,6 +57,16 @@ int Job::getTurnaround()
 	return this->turnaround;
 }
 
+int Job::getLength()
+{
+	return this->length;
+}
+
+int Job::getWaitTime()
+{
+	return this->waitTime;
+}
+
 void Job::setLeft(int timeLeft)
 {
 	this->timeLeft = timeLeft;
@@ -73,4 +84,9 @@ void Job::setTotalIO(int ioLen)
 void Job::setTurnaround(int turnaround)
 {
 	this->turnaround = turnaround;
+}
+
+void Job::setWaitTime(int waitTime)
+{
+	this->waitTime = waitTime;
 }

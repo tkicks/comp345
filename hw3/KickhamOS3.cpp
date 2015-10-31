@@ -28,6 +28,8 @@ int quantumCounter = 0;									// counter for taking off quantum
 int runTime = 1;										// start sim at 1 unit time
 int jobLength = 0;										// total job length
 int turnAround = 0;
+int waitTime = 0;
+int timeInIO = 0;
 vector<Job> jobQ;										// queue jobs waiting for start time
 vector<Job> readyQ;										// queue jobs ready for CPU
 vector<Job> ioQ;										// queue jobs waiting to do IO
@@ -104,11 +106,9 @@ void roundRobin()
 	int isJob, jobTime, newJob;							// is there job at current time, job in IO time left
 	while (runTime < simTime*1000)						// while there is still time left
 	{
-		if (readyQ.size() < degree)						// if the degree is not yet met
-			checkNewJob(runTime);				// do the job at index returned from check if there is a job starting
-		doJob();									// do not check for new jobs and send signal to do job from readyQ
-		// if (ioQ.size() > 0)								// if there are items waiting on IO
-			//
+		if (readyQ.size() + ioQ.size() < degree)		// if the degree is not yet met
+			checkNewJob(runTime);						// do the job at index returned from check if there is a job starting
+		doJob();										// do not check for new jobs and send signal to do job from readyQ
 		runTime += 1;									// increment runtime
 	}
 }
@@ -171,30 +171,44 @@ void removeQuantum(Job currentJob)
 {
 	int jobTime = currentJob.getLeft();					// get the job's time left
 	quantumCounter += 1;								// add one to quantum counter
-	
+
+	if (readyQ.size() > 1)
+		waitTime += 1;
 	if (quantumCounter < quantum)						// if the quantum isn't expired
+	{
 		readyQ.insert(readyQ.begin(), currentJob);		// push job to front of queue
+	}
 	else												// otherwise
 	{
 		currentJob.setLeft(jobTime-quantum);			// subtract quantum from jobTime
-		// cout << quantumCounter << " " << quantum << " " << runTime << " " << currentJob.getPID() << " " << currentJob.getLeft() << endl;
 		readyQ.push_back(currentJob);					// push job to back of queue
-		// runTime += 4;									// add 4 for swap time
+		if (readyQ.size() > 2)							// if jobs waiting in ready queue
+		{
+			runTime += 4;								// add 4 for swap time
+			waitTime += 4;								// add wait time equivalent to swap time
+		}
 		quantumCounter = 0;								// reset quantumCounter to 0
 	}
 	if (currentJob.getLeft() <= 0)						// if the job is done
 	{
+		runTime += 1;
 		jobDone(currentJob);
 	}
 }
 
 void jobDone(Job currentJob)
 {
-	turnAround += runTime-currentJob.getStart();
-	currentJob.setTurnaround(turnAround);
 	jobsDone += 1;									// add one to jobsDone counter
+	int startTime = currentJob.getStart();
+	// turnaround ----------------------------------------
+	int jobTurnaround = runTime - startTime;
+	turnAround += jobTurnaround;
+	currentJob.setTurnaround(jobTurnaround);
+	// jobLength -----------------------------------------
 	jobLength += currentJob.getTurnaround() - currentJob.getIOLen();
-	cout << currentJob.getPID() << " finished after " << currentJob.getTurnaround() - currentJob.getIOLen() << endl;
+	// Ucpu ----------------------------------------------
+	timeInIO += currentJob.getIOLen();
+	cout << currentJob.getPID() << " started at " << startTime << " finished after " << currentJob.getTurnaround() - currentJob.getIOLen() << " at " << runTime << " after waiting " << waitTime << endl;
 	readyQ.erase(readyQ.end());
 }
 
@@ -245,6 +259,12 @@ void debugTest()
 
 	int avgLength = jobLength/jobsDone;
 	int avgTurnaround = turnAround/jobsDone;
+	int avgWaitTime = waitTime/jobsDone;
+	timeInIO += 1;	// while debugging and not dealing with io
+	int pToN = turnAround/timeInIO;
+	for (int i = 0; i < degree; i++)
+		pToN *= pToN;
+	int Ucpu = 1 - pToN;
 
 	cout << "\n\nNumber total jobs: " << readyQ.size() + ioQ.size() + jobQ.size() + jobsDone << endl;
 	cout << "Throughput: " << jobsDone << endl;
@@ -252,6 +272,6 @@ void debugTest()
 	cout << "Number of jobs skipped: " << jobQ.size() << endl;
 	cout << "Avg job length: " << avgLength << " ms" << endl;
 	cout << "Avg turnaround: " << avgTurnaround << " ms" << endl;
-	cout << "Avg wait time: " << endl;
-	cout << "CPU utilization: " << endl;
+	cout << "Avg wait time: " << avgWaitTime << " ms" << endl;
+	cout << "CPU utilization: " << Ucpu << endl;
 }
