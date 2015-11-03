@@ -17,7 +17,7 @@ class Job
 		void setLeft(int timeLeft);
 		void setIOLen(int ioLen);
 		void setTotalIO(int ioLen);
-		void setTurnaround(int turnaround);
+		void setTurnaround(int turnAround);
 		void setWaitTime(int waitTime);
 		void setLength(int length);
 	private:

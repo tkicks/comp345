@@ -83,12 +83,12 @@ void Job::setIOLen(int ioLen)
 }
 void Job::setTotalIO(int ioLen)
 {
-	this->totalIO += ioLen;
+	this->totalIO = ioLen;
 }
 
-void Job::setTurnaround(int turnaround)
+void Job::setTurnaround(int turnAround)
 {
-	this->turnaround = turnaround;
+	this->turnaround = turnAround;
 }
 
 void Job::setWaitTime(int waitTime)

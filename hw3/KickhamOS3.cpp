@@ -18,17 +18,15 @@ TODO: what if two jobs start at same time
 #include <time.h>
 using namespace std;
 
-bool rando = false;										// not randomly generated probabilities
+bool rando = true;										// not randomly generated probabilities
 // user specifiers
 int simTime, quantum, degree;							// sim length, quantum size, max processes
 // stats
 int switchTime = 4;										// time to swap jobs (ms)
 int quantumCounter = 0;									// counter for taking off quantum
 int runTime = 1;										// start sim at 1 unit time
-int jobLength = 0;										// total job length
-int turnAround = 0;
 int waitTime = 0;
-int timeInIO = 0;
+// vectors
 vector<Job> jobQ;										// queue jobs waiting for start time
 vector<Job> readyQ;										// queue jobs ready for CPU
 vector<Job> ioQ;										// queue jobs waiting to do IO
@@ -68,6 +66,8 @@ void getFile()
 	while (!dataFile.eof())								// while more to read in
 	{
 		dataFile >> startTime >> pid >> prob >> length;	// gather all data
+		if (rando == true)								// global constant to determine if randomly generate probability
+			prob = randomGen(2);						// pass prob signal (2)
 		newJob = new Job(startTime, pid, prob, length);	// create new item of class job
 		jobQ.push_back(*newJob);						// push job to back of readyQ
 	}
@@ -94,8 +94,10 @@ int randomGen(int probOrLen)
 	int returnVal;										// either probability or length to return
 	if (probOrLen == 0)									// if generating probability
 		returnVal = rand() % 100 + 0;					// probability of IO is between 0 and .05
-	else												// else generating length
+	else if (probOrLen == 1)							// else generating length
 		returnVal = rand() % 25 + 5;					// length of next IO request
+	else
+		returnVal = rand() % 5 + 0;
 	return returnVal;									// return the value generated
 }
 
@@ -129,6 +131,14 @@ void checkNewJob(int currentTime)
 	}
 }
 
+bool probIO(int genProb, Job currentJob)
+// INPUT: probability of needing IO, current job object working on
+// OUTPUT: true if the job needs IO, false if it doesn't
+// calculates if the job is going to need IO
+{
+	return (genProb <= currentJob.getProb());
+}
+
 void doJob()
 {
 	Job currentJob;										// object being worked on
@@ -142,6 +152,7 @@ void doJob()
 		// cout << ioQ.front().getIOLen() << endl;
 		if (ioLen <= 0)
 		{
+			cout << currentJob.getPID() << " out of IO at " << runTime << endl;
 			readyQ.push_back(currentJob);
 			ioQ.erase(ioQ.begin());
 		}
@@ -157,8 +168,9 @@ void doJob()
 		{
 			ioLen = randomGen(1);
 			currentJob.setIOLen(ioLen);
-			currentJob.setTotalIO(ioLen + currentJob.getTotalIO());
-			cout << "job " << currentJob.getPID() << " in IO for " << currentJob.getIOLen() << endl;
+			ioLen += currentJob.getTotalIO();
+			currentJob.setTotalIO(ioLen);
+			cout << "job " << currentJob.getPID() << " in IO for " << currentJob.getIOLen() << " totaling " << currentJob.getTotalIO() << " at " << runTime << endl;
 			ioQ.push_back(currentJob);
 		}
 		readyQ.erase(readyQ.begin());					// erase current job from front
@@ -177,6 +189,7 @@ void removeQuantum(Job currentJob)
 		waitTime += 1;
 	if (quantumCounter < quantum)						// if the quantum isn't expired
 	{
+		cout << currentJob.getPID() << " in CPU at " << runTime << endl;
 		readyQ.insert(readyQ.begin(), currentJob);		// push job to front of queue
 	}
 	else												// otherwise
@@ -188,39 +201,29 @@ void removeQuantum(Job currentJob)
 			runTime += 4;								// add 4 for swap time
 			waitTime += 4;								// add wait time equivalent to swap time
 		}
+		if (currentJob.getLeft() <= 0)						// if the job is done
+		{
+			runTime += 1;
+			jobDone(currentJob);
+		}
 		quantumCounter = 0;								// reset quantumCounter to 0
 	}
-	if (currentJob.getLeft() <= 0)						// if the job is done
-	{
-		runTime += 1;
-		jobDone(currentJob);
-	}
+	
 }
 
 void jobDone(Job currentJob)
 {
 	// turnaround ----------------------------------------
 	int startTime = currentJob.getStart();
-	int jobTurnaround = runTime - startTime;
-	cout << jobTurnaround << endl;
+	int turnAround = runTime - startTime;
 	// turnAround += jobTurnaround;
-	currentJob.setTurnaround(jobTurnaround);
-	// jobLength -----------------------------------------
-	jobLength += currentJob.getTurnaround() - currentJob.getTotalIO();
-	currentJob.setLength(currentJob.getTurnaround()-currentJob.getIOLen());
+	currentJob.setTurnaround(turnAround);
+	cout << "turnaround: " << turnAround << " currentJob.getTA(): " << currentJob.getTurnaround() << endl;
 	// Ucpu ----------------------------------------------
-	timeInIO += currentJob.getTotalIO();
-	cout << currentJob.getPID() << " started at " << startTime << " finished after " << currentJob.getTurnaround() - currentJob.getTotalIO() << " at " << runTime << " after waiting " << waitTime << endl;
+	// timeInIO += currentJob.getTotalIO();
+	cout << currentJob.getPID() << " started at " << startTime << " finished after " << turnAround << " at " << runTime << " after waiting " << waitTime << endl;
 	doneQ.push_back(currentJob);
 	readyQ.erase(readyQ.end());
-}
-
-bool probIO(int genProb, Job currentJob)
-// INPUT: probability of needing IO, current job object working on
-// OUTPUT: true if the job needs IO, false if it doesn't
-// calculates if the job is going to need IO
-{
-	return (genProb <= currentJob.getProb());
 }
 
 void writeStats()
@@ -228,31 +231,35 @@ void writeStats()
 	Job currentJob;
 	int currentPID, currentStartTime, currentProb, currentTimeLeft, currentIOTime;
 	cout << "jobQ size: " << jobQ.size() << endl;
-	cout << "readyQ:\n";
+	cout << "readyQ: " << readyQ.size() << endl;
 
 	int lenJob = 0;
-	int doneJobs = doneQ.size();
+	int turnAround = 0;
+	int jobsDone = doneQ.size();
 	for (int i = 0; i < doneQ.size(); i++)
 	{
 		currentJob = doneQ.at(i);
 		lenJob += currentJob.getLength();
+		turnAround += currentJob.getTurnaround();
+		cout << turnAround << endl;
 	}
 
-	cout << lenJob << endl;
-	cout << runTime << endl;
-	int avgLength = lenJob/doneJobs;
-	// int avgTurnaround = turnAround/jobsDone;
-	// int avgWaitTime = waitTime/jobsDone;
+	cout << "job length: " << lenJob << endl;
+	cout << "run time: " << runTime << endl;
+	cout << "turnaround: " << turnAround << endl;
+	int avgLength = lenJob/jobsDone;
+	int avgTurnaround = turnAround/jobsDone;
+	int avgWaitTime = waitTime/jobsDone;
 	// timeInIO += 1;	// while debugging and not dealing with io
-	cout << lenJob/runTime << endl;
-	float Ucpu = 100*(lenJob/runTime);
+	cout << turnAround << endl;
+	float Ucpu = (100*lenJob)/runTime;
 
-	cout << "\n\nNumber total jobs: " << readyQ.size() + ioQ.size() + jobQ.size() + doneJobs << endl;
-	cout << "Throughput: " << doneJobs << endl;
+	cout << "\n\nNumber total jobs: " << readyQ.size() + ioQ.size() + jobQ.size() + jobsDone << endl;
+	cout << "Throughput: " << jobsDone << endl;
 	cout << "Number of jobs still in system: " << readyQ.size() + ioQ.size() << endl;
 	cout << "Number of jobs skipped: " << jobQ.size() << endl;
 	cout << "Avg job length: " << avgLength << " ms" << endl;
-	// cout << "Avg turnaround: " << avgTurnaround << " ms" << endl;
-	// cout << "Avg wait time: " << avgWaitTime << " ms" << endl;
-	cout << "CPU utilization: " << Ucpu << endl;
+	cout << "Avg turnaround: " << avgTurnaround << " ms" << endl;
+	cout << "Avg wait time: " << avgWaitTime << " ms" << endl;
+	cout << "CPU utilization: " << Ucpu << '%' << endl;
 }
