@@ -95,3 +95,8 @@ void Job::setWaitTime(int waitTime)
 {
 	this->waitTime = waitTime;
 }
+
+void Job::setLength(int length)
+{
+	this->length = length;
+}

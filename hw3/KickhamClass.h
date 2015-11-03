@@ -19,6 +19,7 @@ class Job
 		void setTotalIO(int ioLen);
 		void setTurnaround(int turnaround);
 		void setWaitTime(int waitTime);
+		void setLength(int length);
 	private:
 		int startTime, pid, prob, length, timeLeft, ioLen, totalIO, turnaround, waitTime;
 };
