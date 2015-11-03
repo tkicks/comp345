@@ -13,6 +13,7 @@ class Job
 		int getTurnaround();
 		int getLength();
 		int getWaitTime();
+		int getTotalIO();
 		void setLeft(int timeLeft);
 		void setIOLen(int ioLen);
 		void setTotalIO(int ioLen);

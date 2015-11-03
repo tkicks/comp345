@@ -67,6 +67,11 @@ int Job::getWaitTime()
 	return this->waitTime;
 }
 
+int Job::getTotalIO()
+{
+	return this->totalIO;
+}
+
 void Job::setLeft(int timeLeft)
 {
 	this->timeLeft = timeLeft;
