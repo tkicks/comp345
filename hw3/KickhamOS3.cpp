@@ -1,11 +1,12 @@
 /*
 Name: 	 Tyler Kickham
 Program: Round Robin Simulator (OS3)
-Purpose: Simuate a round robin scheduler to see how tweaks in scheduling can effect output
-Input:   The input is the name of a text file typed in from the keyboard which contains
-Output:  
-Completed: getFile, getRestInfo, checkNewJob, removeQuantum
-TODO: what if two jobs start at same time
+Purpose: Simulate a round robin scheduler to see how tweaks in quantum/degree/sim time can effect output
+Input:   The input is the name of a text file typed in from the keyboard which contains four columns
+		 (start time, PID, prob IO, length) after a first line that states how many jobs (lines) are in file
+Output:  Stats gained from simulation (# jobs, throughput, jobs still in system, skipped, avg length, avg
+		 turnaround, avg wait time, CPU utilization) displayed in console
+TODO: make vars local/part of class not global
 */
 
 #include "KickhamClass.cpp"
@@ -138,6 +139,9 @@ bool probIO(int genProb, Job currentJob)
 }
 
 void doJob(int runTime)
+// INPUT: current run time
+// OUTPUT: none
+// performs a clock tick of IO if jobs waiting, checks if CPU job needs IO
 {
 	Job currentJob;										// object being worked on
 	int ioLen;											// length of IO
@@ -223,6 +227,9 @@ void jobDone(Job currentJob, int runTime)
 }
 
 void writeStats(int runTime)
+// INPUT: current run time (ending time)
+// OUTPUT: stats from simulation (# jobs, thruput, in system, skip, len, turnaround, wait, Ucpu)
+// finds summation of lengths and turnarounds of completed jobs and Ucpu and displays to console
 {
 	Job currentJob;										// job object to be used
 	// cout << "jobQ size: " << jobQ.size() << endl;
