@@ -80,9 +80,9 @@ void simulation::allocate(Job *newJob, vector<Job> &processes)
 					placed = true;
 					newJob->setStart(i);
 					processes.push_back(*newJob);
-					cout << memUsed << " + " << newJob->getSize() << " = " << memUsed + newJob->getSize() << endl;
+					cout << newJob->getPID() << " starts at: " << i << " :: ends at: " << i + newJob->getSize() - 1 << " :: size: " << newJob->getSize() << endl;
 					memUsed += newJob->getSize();
-					for (int k = i; k < newJob->getSize(); k++)
+					for (int k = i; k < newJob->getSize() + i; k++)
 						this->memArray[k] = 1;
 				}
 			}
@@ -102,7 +102,7 @@ void simulation::deallocate(vector<Job> &processes, int PID)
 			int size = processes.at(i).getSize();
 			for (int j = start; j < size + start; j++)
 				memArray[j] = 0;
-			cout << memUsed << " - " << size << " = " << memUsed - size << endl;
+			cout << processes.at(i).getPID() << " removed from: " << processes.at(i).getStart() << " -> " << processes.at(i).getStart() + processes.at(i).getSize() - 1 << " :: size: " << size << endl;
 			memUsed -= processes.at(i).getSize();
 			processes.erase(processes.begin()+i);
 		}
