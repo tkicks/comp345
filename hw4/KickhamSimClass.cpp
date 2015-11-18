@@ -82,8 +82,9 @@ void simulation::allocate(Job *newJob, vector<Job> &processes)
 					processes.push_back(*newJob);
 					cout << newJob->getPID() << " starts at: " << i << " :: ends at: " << i + newJob->getSize() - 1 << " :: size: " << newJob->getSize() << endl;
 					memUsed += newJob->getSize();
+					int PID = newJob->getPID();
 					for (int k = i; k < newJob->getSize() + i; k++)
-						this->memArray[k] = 1;
+						this->memArray[k] = PID;
 				}
 			}
 			i++;
@@ -113,4 +114,72 @@ int simulation::getUsed(int location)
 // return if there is a process there
 {
 	return this->memArray[location];
+}
+
+void simulation::getTable(std::vector<Job> &processes, simulation memory)
+// write table
+{
+	cout.width(23);
+	cout << "Memory Table\n";
+	cout << "PID";
+	cout.width(10);
+	cout << "Begin";
+	cout.width(10);
+	cout << "End";
+	cout.width(10);
+	cout << "Size\n";
+
+	// test vector (working)
+	int i = 0;
+	int j, k, pid, start, end, size;
+	while (i < memSize)
+	{
+		bool found = false;
+		if (this->memArray[i] == 0)
+		{
+			pid = 0;
+			start = i;
+			j = i;
+			while (memArray[j] == 0 and j < memSize)
+				j++;
+			end = j - 1;
+			size = end - start + 1;
+			memory.writeTable(pid, start, end, size);
+			i = j;
+		}
+		else
+		{
+			pid = this->memArray[i];
+			k = 0;
+			while (k < processes.size() and !found)
+			{
+				if (processes.at(k).getPID() == pid)
+				{
+					start = processes.at(k).getStart();
+					size = processes.at(k).getSize();
+					end = start + size - 1;
+					memory.writeTable(pid, start, end, size);
+					i = i + size;
+					// cout << "back and i = " << i << endl;
+					found = true;
+				}
+				k++;
+			}
+		}
+	}	// cout << "process " << i << ": op: " << processes.at(i).getOp() << " PID: " << processes.at(i).getPID() << " size: " << processes.at(i).getSize() << " starting at: " << processes.at(i).getStart() << endl;
+}
+
+void simulation::writeTable(int pid, int start, int end, int size)
+// write table
+{
+	if (pid != 0)
+		cout << right << setw(4) << pid;
+	else
+		cout << right << setw(4) << "Free";
+	cout.width(10);
+	cout << start;
+	cout.width(10);
+	cout << end;
+	cout.width(10);
+	cout << size << endl;
 }
