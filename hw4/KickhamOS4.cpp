@@ -8,44 +8,27 @@ Output:
 
 
 #include <vector>
-#include "KickhamSimClass.cpp"
-#include "KickhamJobClass.cpp"
-#include "KickhamOS4.h"
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
 #include <time.h>
+#include "KickhamJobClass.cpp"
+#include "KickhamSimClass.cpp"
+#include "KickhamOS4.h"
 using namespace std;
+
+
+const int memSize = 1048576;							// size of memory (bytes)
 
 
 int main()
 {
 	vector<Job> processes;								// vector for processes
-	getFile(processes);									// store processes from file into vector
-}
+	simulation memory;									// object of simulation class depicting memory
+	memory.getFile(processes);							// store processes from file into vector
 
-void getFile(vector<Job> &processes)
-// read input file
-{
-	Job *newJob;
-	string filename;
-	char op;
-	int PID, size;
-	cout << "Enter filename: ";
-	cin >> filename;
-	ifstream dataFile(filename.c_str());
-	if (!dataFile.good())
-	{
-		cout << "File not found\n";
-		exit(1);
-	}
-
-	do {
-		dataFile >> op >> PID;
-		if (op != 'D')
-			dataFile >> size;
-		newJob = new Job(op, PID, size);
-		cout << "op: " << newJob->getOp() << " PID: " << newJob->getPID() << " size: " << newJob->getSize() << endl;
-	} while (op != 'Q');
+	// test vector (working)
+	for (int i = 0; i < processes.size(); i++)
+		cout << "process " << i << ": op: " << processes.at(i).getOp() << " PID: " << processes.at(i).getPID() << " size: " << processes.at(i).getSize() << endl;
 }

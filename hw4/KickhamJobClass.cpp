@@ -19,7 +19,10 @@ char Job::getOp()
 
 int Job::getPID()
 {
-	return this->PID;
+	if (this->op == 'A' or this->op == 'D')
+		return this->PID;
+	else
+		return 0;
 }
 
 int Job::getSize()
