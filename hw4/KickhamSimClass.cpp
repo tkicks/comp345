@@ -11,7 +11,7 @@ simulation::~simulation()
 	// deconstructor
 }
 
-void simulation::getFile(vector<Job> &processes)
+void simulation::getFile(vector<Job> &processes, simulation memory)
 // read input file
 {
 	Job *newJob;
@@ -29,11 +29,22 @@ void simulation::getFile(vector<Job> &processes)
 
 	do {
 		dataFile >> op >> PID;
-		if (op != 'D')
+		if (op == 'A')
+		{
 			dataFile >> size;
-		if (op == 'Q')
+			newJob = new Job(op, PID, size);
+			processes.push_back(*newJob);
+		}
+		else if (op == 'D')
+			memory.deallocate(processes, PID);
+		else
 			break;
-		newJob = new Job(op, PID, size);
-		processes.push_back(*newJob);
+		
 	} while (op != 'Q');
+}
+
+void simulation::deallocate(vector<Job> &processes, int PID)
+// deallocate process from memory
+{
+	cout << processes.size() << endl;
 }

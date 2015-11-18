@@ -26,7 +26,7 @@ int main()
 {
 	vector<Job> processes;								// vector for processes
 	simulation memory;									// object of simulation class depicting memory
-	memory.getFile(processes);							// store processes from file into vector
+	memory.getFile(processes, memory);					// store processes from file into vector
 
 	// test vector (working)
 	for (int i = 0; i < processes.size(); i++)
