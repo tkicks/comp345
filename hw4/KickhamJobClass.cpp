@@ -27,6 +27,16 @@ int Job::getSize()
 	return this->size;
 }
 
+int Job::getStart()
+{
+	return this->start;
+}
+
+void Job::setStart(int location)
+{
+	this->start = location;
+}
+
 Job::~Job()
 {
 	// destructor

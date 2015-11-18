@@ -7,7 +7,9 @@ class Job {
 		char getOp();
 		int getPID();
 		int getSize();
+		int getStart();
+		void setStart(int location);
 	private:
 		char op;
-		int PID, size;
+		int PID, size, start;
 };

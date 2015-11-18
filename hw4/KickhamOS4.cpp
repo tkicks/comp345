@@ -27,5 +27,6 @@ int main()
 
 	// test vector (working)
 	for (int i = 0; i < processes.size(); i++)
-		cout << "process " << i << ": op: " << processes.at(i).getOp() << " PID: " << processes.at(i).getPID() << " size: " << processes.at(i).getSize() << endl;
+		cout << "process " << i << ": op: " << processes.at(i).getOp() << " PID: " << processes.at(i).getPID() << " size: " << processes.at(i).getSize() << " starting at: " << processes.at(i).getStart() << endl;
+	cout << "memory used at location 78923 (0 no 1 yes): " << memory.getUsed(78923) << endl;
 }
