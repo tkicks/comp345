@@ -19,9 +19,6 @@ Output:
 using namespace std;
 
 
-const int memSize = 1048576;							// size of memory (bytes)
-
-
 int main()
 {
 	vector<Job> processes;								// vector for processes

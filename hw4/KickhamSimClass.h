@@ -4,8 +4,8 @@ class simulation {
 		simulation();
 		~simulation();
 		void getFile(vector<Job> &processes, simulation memory);
+		void allocate(Job *newJob, vector<Job> &processes);
 		void deallocate(vector<Job> &processes, int PID);
-		// other simulation functions
 	private:
-		// variables
+		int memUsed;
 };
