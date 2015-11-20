@@ -10,6 +10,7 @@ Job::Job(char op, int PID, int size)
 	this->op = op;
 	this->PID = PID;
 	this->size = size;
+	this->skipped = false;
 }
 
 char Job::getOp()
@@ -32,9 +33,19 @@ int Job::getStart()
 	return this->start;
 }
 
+bool Job::getSkipped()
+{
+	return this->skipped;
+}
+
 void Job::setStart(int location)
 {
 	this->start = location;
+}
+
+void Job::setSkipped()
+{
+	this->skipped = true;
 }
 
 Job::~Job()

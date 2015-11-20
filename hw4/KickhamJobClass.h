@@ -8,8 +8,11 @@ class Job {
 		int getPID();
 		int getSize();
 		int getStart();
+		bool getSkipped();
 		void setStart(int location);
+		void setSkipped();
 	private:
 		char op;
 		int PID, size, start;
+		bool skipped;
 };
