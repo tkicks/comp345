@@ -5,11 +5,12 @@ using namespace std;
 
 const int MAX = 2000;
 const int N   = 10;
-const int maxDelta = 5;
+const int maxDelta = 2;
 
 void setupstring (char [], int&);
 void runSim(char omega[], int omegalength);
 void setWindow(char omega[], char window[], int omegalength, int delta, int& omegaLoc);
+void fixWindow(char window[], int delta, int i, char newData);
 
 int main ()
 {
@@ -19,10 +20,10 @@ int main ()
 
    runSim(omega, omegalength);
    // for debugging
-   // for (int i = 0; i < omegalength; i++)
-   //    cout << omega [i];
-   // cout << endl;
-   // return 0;
+   for (int i = 0; i < omegalength; i++)
+      cout << omega [i];
+   cout << endl;
+   return 0;
 }
 
 void runSim(char omega[], int omegalength)
@@ -43,15 +44,33 @@ void runSim(char omega[], int omegalength)
 void setWindow(char omega[], char window[], int omegalength, int delta, int& omegaLoc)
 //
 {
+   char newData = omega[omegaLoc];
    int tempLoc = omegaLoc - delta;
    int i = 0;
+   bool newPage = true;
    while (i < delta)
    {
-      window[i] = omega[tempLoc];
+      if (window[i] == newData)
+      {
+         cout << omegaLoc << "/" << omegalength << " page exists\n";
+         newPage = false;
+         break;
+      }
+      if (window[i] == '\0')
+         break;
       i++;
       tempLoc++;
    }
-   // debugging
+
+   if (!newPage)
+   {
+      fixWindow(window, delta, i, newData);
+   }
+
+   else
+      window[i] = newData;
+   
+   // debugging ------------------------
    if (omegaLoc == omegalength)
    {
       cout << delta << ": ";
@@ -59,7 +78,19 @@ void setWindow(char omega[], char window[], int omegalength, int delta, int& ome
          cout << window[k];
       cout << endl;
    }
+   // ----------------------------------
    omegaLoc += 1;
+}
+
+void fixWindow(char window[], int delta, int i, char newData)
+//
+{
+   while (i < delta-1 and window[i] != '\0')
+   {
+      window[i] = window[i+1];
+      i += 1;
+   }
+   window[i] = newData;
 }
 
 void setupstring (char omega[], int& omegaleng)
