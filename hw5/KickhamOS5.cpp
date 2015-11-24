@@ -5,10 +5,11 @@ using namespace std;
 
 const int MAX = 2000;
 const int N   = 10;
+const int maxDelta = 5;
 
 void setupstring (char [], int&);
 void runSim(char omega[], int omegalength);
-void setWindow(char omega[], char window[], int omegalength, int winSize, int& omegaLoc);
+void setWindow(char omega[], char window[], int omegalength, int delta, int& omegaLoc);
 
 int main ()
 {
@@ -18,44 +19,47 @@ int main ()
 
    runSim(omega, omegalength);
    // for debugging
-   for (int i = 0; i < omegalength; i++)
-      cout << omega [i];
-   cout << endl;
-   return 0;
+   // for (int i = 0; i < omegalength; i++)
+   //    cout << omega [i];
+   // cout << endl;
+   // return 0;
 }
 
 void runSim(char omega[], int omegalength)
 //
 {
    int omegaLoc = 0;
-   int winSize = 0;
-   // for (int delta = 1; delta <= 200; delta++)
-   while (omegaLoc <= omegalength)
+   for (int delta = 1; delta <= maxDelta; delta++)
    {
-      if (winSize < 5)
-         winSize += 1;
-
-      char window[winSize];
-      setWindow(omega, window, omegalength, winSize, omegaLoc);
+      omegaLoc = 0;     // reset omegalocation to start
+      char window[delta];
+      while (omegaLoc <= omegalength)
+      {
+         setWindow(omega, window, omegalength, delta, omegaLoc);
+      }
    }
 }
 
-void setWindow(char omega[], char window[], int omegalength, int winSize, int& omegaLoc)
+void setWindow(char omega[], char window[], int omegalength, int delta, int& omegaLoc)
 //
 {
-   int tempLoc = omegaLoc - winSize;
+   int tempLoc = omegaLoc - delta;
    int i = 0;
-   while (i < winSize)
+   while (i < delta)
    {
       window[i] = omega[tempLoc];
       i++;
       tempLoc++;
    }
    // debugging
-   for (int k = 0; k < winSize; k++)
-      cout << window[k];
+   if (omegaLoc == omegalength)
+   {
+      cout << delta << ": ";
+      for (int k = 0; k < delta; k++)
+         cout << window[k];
+      cout << endl;
+   }
    omegaLoc += 1;
-   cout << endl;
 }
 
 void setupstring (char omega[], int& omegaleng)
