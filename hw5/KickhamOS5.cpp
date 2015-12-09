@@ -3,6 +3,7 @@ page faults working for test deltas
 */
 
 #include <iostream>
+#include <iomanip>
 #include <string.h>
 #include <vector>
 
@@ -13,15 +14,17 @@ const int N   = 10;
 const int maxDelta = 5;
 
 void setupstring (char [], int&);
+void writeHeader();
 void runSim(char omega[], int omegalength, int delta, float& pageFault, float& avgSize);
 void setWindow(char omega[], int omegalength, int delta, int& omegaLoc, vector<char> &window, float& pageFault, float& avgSize);
+void writeTable(int delta, float pageFault, float avgSize, float faultRate);
 
 int main ()
 {
    char omega [MAX];
    int omegalength;
    setupstring (omega, omegalength);
-   // cout << omegalength << endl;
+   writeHeader();
 
    for (int delta = 1; delta <= maxDelta; delta++)
    {
@@ -29,9 +32,7 @@ int main ()
       float avgSize = 0;
       runSim(omega, omegalength, delta, pageFault, avgSize);
       float faultRate = pageFault/omegalength;
-      cout << "page fault: " << pageFault << endl;
-      cout << "average size: " << avgSize << endl;
-      cout << "average page fault rate: " << faultRate << endl;
+      writeTable(delta, pageFault, avgSize, faultRate);
    }
    // for debugging
    // for (int i = 0; i < omegalength; i++)
@@ -50,22 +51,18 @@ void runSim(char omega[], int omegalength, int delta, float& pageFault, float& a
       setWindow(omega, omegalength, delta, omegaLoc, window, pageFault, avgSize);
       numSets += 1;
    }
-   // cout << "avgSize " << avgSize << " numSets " << numSets << endl; 
    avgSize /= numSets;
 }
 
 void setWindow(char omega[], int omegalength, int delta, int& omegaLoc, vector<char> &window, float& pageFault, float& avgSize)
 //
 {
-   // for (int k = 0; k < window.size(); k++)
-   //    cout << window.at(k);
-   // cout << endl;
    char newData = omega[omegaLoc];
    bool newPage = true;
    bool eraseBegin = true;
-   // int eraseFirst = -1;
+   // int eraseFirst = 0;
 
-   if (window.size() < delta)
+   if (window.size() < delta and omegaLoc < delta)
       eraseBegin = false;
 
    for (int i = 0; i < window.size(); i++)
@@ -76,13 +73,13 @@ void setWindow(char omega[], int omegalength, int delta, int& omegaLoc, vector<c
          // eraseFirst = i;
          // if (eraseFirst == 0)
          //    eraseBegin = false;
-         // cout << newData << " already at " << omegaLoc << " " << window.at(i) << endl;
+         // window.erase(window.begin()+eraseFirst);
       }
    }
 
    if (newPage)
       pageFault += 1;
-   // else
+   // else if (!eraseBegin)
    //    window.erase(window.begin()+eraseFirst);
 
    if (eraseBegin)
@@ -90,8 +87,35 @@ void setWindow(char omega[], int omegalength, int delta, int& omegaLoc, vector<c
 
    window.push_back(newData);
    avgSize += window.size();
-   // cout << window.size() << endl;
    omegaLoc += 1;
+}
+
+void writeHeader()
+{
+   cout << "Delta";
+   cout.width(11);
+   cout << "Faults";
+   cout.width(22);
+   cout << "Avg Size WS";
+   cout.width(22);
+   cout << "Fault Rate\n";
+}
+
+void writeTable(int delta, float pageFault, float avgSize, float faultRate)
+{
+   cout.precision(0);
+   cout << fixed;
+   cout.width(3);
+   cout << delta;
+   cout.width(12);
+   cout << pageFault;
+
+   cout << fixed;
+   cout.precision(3);
+   cout.width(20);
+   cout << avgSize;
+   cout.width(20);
+   cout << faultRate << endl;
 }
 
 void setupstring (char omega[], int& omegaleng)
