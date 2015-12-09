@@ -1,5 +1,6 @@
-#include<iostream>
-#include<string.h>
+#include <iostream>
+#include <string.h>
+#include <vector>
 
 using namespace std;
 
@@ -8,9 +9,9 @@ const int N   = 10;
 const int maxDelta = 2;
 
 void setupstring (char [], int&);
-void runSim(char omega[], int omegalength);
-void setWindow(char omega[], char window[], int omegalength, int delta, int& omegaLoc);
-void fixWindow(char window[], int delta, int i, char newData);
+void runSim(char omega[], int omegalength, int delta);
+void setWindow(char omega[], int omegalength, int delta, int& omegaLoc, vector<char> &window);
+void fixWindow(vector<char> &window, int delta, int i, char newData);
 
 int main ()
 {
@@ -18,79 +19,79 @@ int main ()
    int omegalength;
    setupstring (omega, omegalength);
 
-   runSim(omega, omegalength);
-   // for debugging
-   for (int i = 0; i < omegalength; i++)
-      cout << omega [i];
-   cout << endl;
-   return 0;
-}
-
-void runSim(char omega[], int omegalength)
-//
-{
-   int omegaLoc = 0;
    for (int delta = 1; delta <= maxDelta; delta++)
    {
-      omegaLoc = 0;     // reset omegalocation to start
-      char window[delta];
-      while (omegaLoc <= omegalength)
-      {
-         setWindow(omega, window, omegalength, delta, omegaLoc);
-      }
+      runSim(omega, omegalength, delta);
+      cout << endl << endl;
+   }
+   // for debugging
+   for (int i = 0; i < omegalength; i++)
+      cout << omega[i];
+   cout << endl;
+}
+
+void runSim(char omega[], int omegalength, int delta)
+//
+{
+   vector<char> window;
+   int omegaLoc = 0;
+   while (omegaLoc <= omegalength)
+   {
+      setWindow(omega, omegalength, delta, omegaLoc, window);
    }
 }
 
-void setWindow(char omega[], char window[], int omegalength, int delta, int& omegaLoc)
+void setWindow(char omega[], int omegalength, int delta, int& omegaLoc, vector<char> &window)
 //
 {
    char newData = omega[omegaLoc];
-   int tempLoc = omegaLoc - delta;
    int i = 0;
    bool newPage = true;
-   while (i < delta)
-   {
-      if (window[i] == newData)
-      {
-         cout << omegaLoc << "/" << omegalength << " page exists\n";
-         newPage = false;
-         break;
-      }
-      if (window[i] == '\0')
-         break;
-      i++;
-      tempLoc++;
-   }
+   if (omegaLoc >= delta)
+      window.erase(window.begin());
+   window.push_back(newData);
+   cout << window.front();
+   // while (i < delta)
+   // {
+   //    // cout << "window[" << i << "] = " << window.at(i) << "     new = " << newData << endl;
+   //    if (window.at(i) == newData)
+   //    {
+   //       cout << omegaLoc << "/" << omegalength << " page exists\n";
+   //       newPage = false;
+   //       break;
+   //    }
+   //    if (window.at(i) == '\0')
+   //       break;
+   //    i++;
+   // }
 
-   if (!newPage)
-   {
-      fixWindow(window, delta, i, newData);
-   }
+   // if (!newPage)
+   // {
+   //    if (i < delta)
+   //       cout << "forget it\n";
+   // }
 
-   else
-      window[i] = newData;
+   // else
+   //    window.push_back(newData);
+   // cout << window.at(1) << endl;
    
    // debugging ------------------------
-   if (omegaLoc == omegalength)
-   {
-      cout << delta << ": ";
-      for (int k = 0; k < delta; k++)
-         cout << window[k];
-      cout << endl;
-   }
+   // if (omegaLoc == omegalength)
+   // {
+   //    cout << delta << ": ";
+   //    for (int k = 0; k < delta; k++)
+   //       cout << window.at(k);
+   //    cout << endl;
+   // }
    // ----------------------------------
    omegaLoc += 1;
 }
 
-void fixWindow(char window[], int delta, int i, char newData)
+void fixWindow(vector<char> &window, int delta, int i, char newData)
 //
 {
-   while (i < delta-1 and window[i] != '\0')
-   {
-      window[i] = window[i+1];
-      i += 1;
-   }
-   window[i] = newData;
+   window.erase(window.begin());
+   window.at(i) = newData;
 }
 
 void setupstring (char omega[], int& omegaleng)
